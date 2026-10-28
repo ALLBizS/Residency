@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Uganda Tax Residence Checker</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--text:#1c2430;--muted:#5d6b7c;--line:#d9dee5;--accent:#1f6feb;--ok:#117a43;--okbg:#e3f5ea;--no:#a4361f;--nobg:#fbe9e5;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10151c;--card:#19212b;--text:#e7ecf2;--muted:#9aa8b8;--line:#2c3744;--accent:#5b9cff;--ok:#5fd394;--okbg:#12301f;--no:#ff9a85;--nobg:#3a1c15;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#10151c;--card:#19212b;--text:#e7ecf2;--muted:#9aa8b8;--line:#2c3744;--accent:#5b9cff;--ok:#5fd394;--okbg:#12301f;--no:#ff9a85;--nobg:#3a1c15;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+.wrap{max-width:640px;margin:0 auto;padding:20px 16px 40px}
+h1{font-size:1.4rem;margin:0 0 4px}
+p.sub{margin:0 0 18px;color:var(--muted)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:14px}
+label{display:block;font-weight:600;margin-bottom:4px}
+small{display:block;color:var(--muted);margin-bottom:6px;font-weight:400}
+input[type=number],select{width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--text);font-size:1rem}
+.row{margin-bottom:14px}.row:last-child{margin-bottom:0}
+.yn{display:flex;gap:8px}
+.yn button{flex:1;padding:10px;border:1px solid var(--line);background:var(--bg);color:var(--text);border-radius:8px;font-size:1rem;cursor:pointer}
+.yn button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+#go{width:100%;padding:13px;border:0;border-radius:10px;background:var(--accent);color:#fff;font-size:1.05rem;font-weight:600;cursor:pointer}
+#res{display:none}
+.badge{border-radius:10px;padding:14px;font-size:1.15rem;font-weight:700;margin-bottom:12px}
+.badge.ok{background:var(--okbg);color:var(--ok)}.badge.no{background:var(--nobg);color:var(--no)}
+ul{list-style:none;padding:0;margin:0}
+li{padding:8px 0;border-top:1px solid var(--line)}li:first-child{border-top:0}
+.t{font-weight:700}.pass{color:var(--ok)}.fail{color:var(--no)}
+.note{color:var(--muted);font-size:.9rem}
+table{width:100%;border-collapse:collapse;margin:14px 0 6px}
+th,td{padding:8px 6px;text-align:right;border-top:1px solid var(--line)}
+th:first-child,td:first-child{text-align:left}
+th{font-size:.85rem;color:var(--muted);border-top:0}
+tr.cur td{background:var(--okbg);font-weight:700}
+.tw{overflow-x:auto}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Uganda Tax Residence Checker</h1>
+  <p class="sub">Is this individual a tax resident, and does their PAYE change?</p>
+
+  <div class="card">
+    <div class="row">
+      <label for="fy">Financial year (1 July – 30 June)</label>
+      <select id="fy"></select>
+    </div>
+    <div class="row">
+      <label>Does the person have a permanent home in Uganda?</label>
+      <div class="yn" id="home"><button data-v="1">Yes</button><button data-v="0" class="on">No</button></div>
+    </div>
+    <div class="row">
+      <label for="d0">Days in Uganda this financial year</label>
+      <input type="number" id="d0" min="0" max="366" value="0">
+    </div>
+    <div class="row">
+      <label for="d1">Days in Uganda in the previous year</label>
+      <input type="number" id="d1" min="0" max="366" value="0">
+    </div>
+    <div class="row">
+      <label for="d2">Days in Uganda two years ago</label>
+      <input type="number" id="d2" min="0" max="366" value="0">
+    </div>
+    <div class="row">
+      <label for="d12">Most days in Uganda in any 12-month period</label>
+      <small>The 12 months can start or end in this financial year (e.g. Jan–Dec). Leave blank to use this year’s days.</small>
+      <input type="number" id="d12" min="0" max="366" placeholder="optional">
+    </div>
+    <div class="row">
+      <label>Government employee posted abroad?</label>
+      <div class="yn" id="gov"><button data-v="1">Yes</button><button data-v="0" class="on">No</button></div>
+    </div>
+    <div class="row">
+      <label for="inc">Monthly gross pay (UGX)</label>
+      <small>Used to compare PAYE as resident and as non-resident.</small>
+      <input type="number" id="inc" min="0" placeholder="e.g. 3000000">
+    </div>
+    <div class="row">
+      <label>Does the person have secondary income (a second employer)?</label>
+      <div class="yn" id="sec"><button data-v="1">Yes</button><button data-v="0" class="on">No</button></div>
+    </div>
+    <div class="row">
+      <label for="sinc">Monthly secondary income (UGX)</label>
+      <small>Only used if you chose Yes.</small>
+      <input type="number" id="sinc" min="0" placeholder="e.g. 1000000">
+    </div>
+    <div class="row">
+      <label for="srate">Secondary income flat rate (%)</label>
+      <input type="number" id="srate" min="0" max="100" value="40">
+    </div>
+    <button id="go">Check residence</button>
+  </div>
+
+  <div class="card" id="res">
+    <div id="badge" class="badge"></div>
+    <ul id="tests"></ul>
+    <div id="cmp"></div>
+    <p id="paye" class="note"></p>
+  </div>
+
+  <p class="note">Residence rules are from the Income Tax Act (section 7). PAYE uses the standard monthly bands (nil to 235,000; 10% to 335,000; 20% to 410,000; 30% above, plus 10% over 10 million) and a flat 30% for non-residents, before NSSF or other adjustments. Secondary income is taxed at the flat rate entered (40% by default), whether resident or not. It is a guide only. Please confirm with URA or a tax adviser, especially for borderline cases.</p>
+</div>
+
+<script>
+var fy=document.getElementById('fy'),now=new Date().getFullYear();
+for(var y=now+1;y>=now-6;y--){var o=document.createElement('option');o.value=y;o.textContent=y+'/'+(y+1);fy.appendChild(o);}
+fy.value=(new Date().getMonth()>=6?now:now-1);
+var sel={home:0,gov:0,sec:0};
+['home','gov','sec'].forEach(function(id){
+  var box=document.getElementById(id);
+  box.addEventListener('click',function(e){
+    if(e.target.tagName!=='BUTTON')return;
+    [].forEach.call(box.children,function(b){b.classList.remove('on')});
+    e.target.classList.add('on');sel[id]=+e.target.dataset.v;
+  });
+});
+function resPaye(m){
+  if(m<=235000)return 0;
+  if(m<=335000)return (m-235000)*0.1;
+  if(m<=410000)return 10000+(m-335000)*0.2;
+  return 25000+(m-410000)*0.3+(m>1e7?(m-1e7)*0.1:0);
+}
+function nonResPaye(m){return m*0.3+(m>1e7?(m-1e7)*0.1:0);}
+function n(id){var v=parseFloat(document.getElementById(id).value);return isNaN(v)?0:v;}
+document.getElementById('go').addEventListener('click',function(){
+  var d0=n('d0'),d1=n('d1'),d2=n('d2');
+  var raw=document.getElementById('d12').value;
+  var d12=raw===''?d0:Math.max(n('d12'),d0);
+  var total=d0+d1+d2,avg=total/3;
+  var tests=[
+    {name:'Permanent home test',pass:sel.home===1,
+     txt:sel.home===1?'Has a permanent home in Uganda.':'No permanent home in Uganda.'},
+    {name:'183-day test',pass:d12>=183,
+     txt:d12+' days in the best 12-month period (needs 183 or more).'},
+    {name:'3-year average test',pass:d0>0&&d1>0&&d2>0&&avg>122,
+     txt:(d0>0&&d1>0&&d2>0)?'Present in all 3 years. Average of '+avg.toFixed(1)+' days (needs more than 122).':'Must be present in Uganda in each of the 3 years. At least one year has 0 days.'},
+    {name:'Government employee test',pass:sel.gov===1,
+     txt:sel.gov===1?'Government employee posted abroad.':'Not a government employee posted abroad.'}
+  ];
+  var res=tests.some(function(t){return t.pass});
+  var b=document.getElementById('badge');
+  var yr=fy.value+'/'+(+fy.value+1);
+  b.className='badge '+(res?'ok':'no');
+  b.textContent=res?'RESIDENT for '+yr:'NON-RESIDENT for '+yr;
+  var ul=document.getElementById('tests');ul.innerHTML='';
+  tests.forEach(function(t){
+    var li=document.createElement('li');
+    var s=document.createElement('span');s.className='t '+(t.pass?'pass':'fail');
+    s.textContent=(t.pass?'✔ Met: ':'✘ Not met: ')+t.name;
+    li.appendChild(s);li.appendChild(document.createElement('br'));
+    li.appendChild(document.createTextNode(t.txt));ul.appendChild(li);
+  });
+  document.getElementById('paye').textContent=res
+    ?'Meeting any one test makes the person resident for the whole financial year, so PAYE should move to resident rates (progressive bands) instead of the flat non-resident rate. Review payroll and adjust earlier months if needed.'
+    :'No test is met, so non-resident PAYE treatment continues for this year.';
+  var inc=n('inc'),cmp=document.getElementById('cmp');
+  if(inc>0){
+    var f=function(x){return Math.round(x).toLocaleString('en-US')};
+    var si=sel.sec===1?n('sinc'):0,sp=si*n('srate')/100;
+    var rp=resPaye(inc)+sp,np=nonResPaye(inc)+sp,diff=np-rp;
+    cmp.innerHTML='<div class="tw"><table><tr><th></th><th>Per month</th><th>Per year</th></tr>'+
+      '<tr class="'+(res?'cur':'')+'"><td>As resident'+(res?' (applies)':'')+'</td><td>'+f(rp)+'</td><td>'+f(rp*12)+'</td></tr>'+
+      '<tr class="'+(res?'':'cur')+'"><td>As non-resident'+(res?'':' (applies)')+'</td><td>'+f(np)+'</td><td>'+f(np*12)+'</td></tr>'+
+      (sp>0?'<tr><td>Of which: secondary income PAYE (same for both)</td><td>'+f(sp)+'</td><td>'+f(sp*12)+'</td></tr>':'')+'<tr><td>Difference</td><td>'+f(Math.abs(diff))+'</td><td>'+f(Math.abs(diff)*12)+'</td></tr></table></div>'+
+      '<p>'+(diff>0?'As a resident, the person pays <b>UGX '+f(diff)+'</b> less PAYE each month ('+f(diff*12)+' a year).':diff<0?'As a resident, the person pays <b>UGX '+f(-diff)+'</b> more PAYE each month.':'There is no difference at this pay level.')+'</p>';
+  }else{cmp.innerHTML='<p class="note">Enter a monthly gross pay to see the PAYE comparison.</p>';}
+  var r=document.getElementById('res');r.style.display='block';r.scrollIntoView({behavior:'smooth'});
+});
+</script>
+</body>
+</html>
